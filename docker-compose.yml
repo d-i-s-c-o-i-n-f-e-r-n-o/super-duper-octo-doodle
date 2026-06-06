@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: hotelwebapp-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: hotelapp
+      POSTGRES_PASSWORD: hotelapp
+      POSTGRES_DB: hotelapp
+    volumes:
+      - hotelwebapp_pgdata:/var/lib/postgresql/data
+
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: development
+      PORT: 4000
+      PGHOST: postgres
+      PGPORT: 5432
+      PGUSER: hotelapp
+      PGPASSWORD: hotelapp
+      PGDATABASE: hotelapp
+      JWT_SECRET: change_me_super_secret
+      JWT_ACCESS_TTL_SECONDS: 43200
+      LOGIN_RATE_LIMIT_WINDOW_MS: 900000
+      LOGIN_RATE_LIMIT_MAX: 10
+      LOGIN_FAILS_BEFORE_LOCK: 12
+      LOGIN_LOCK_MS: 1800000
+      DB_AUTO_MIGRATE: "true"
+      BOOTSTRAP_ADMIN_EMAIL: admin@hotel.local
+      BOOTSTRAP_ADMIN_PASSWORD: Admin12345!
+      CORS_ORIGIN: http://localhost:5173
+    depends_on:
+      - postgres
+
+  client:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_BASE: http://localhost:4000
+    depends_on:
+      - server
+
+volumes:
+  hotelwebapp_pgdata:
+
